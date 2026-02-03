@@ -1,27 +1,30 @@
+require('dotenv').config(); // Charge les variables du fichier .env
 const express = require('express');
 const mysql = require('mysql2');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Configuration de la connexion à MariaDB
+// Configuration de la connexion utilisant les variables d'environnement
 const connection = mysql.createConnection({
-  host: '172.29.16.155',
-  user: 'root',      // Votre nom d'utilisateur MariaDB
-  password: 'root',      // Votre mot de passe MariaDB
-  database: 'Abri'   // Le nom de votre base de données
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME
 });
 
-// Tentative de connexion
 connection.connect((err) => {
   if (err) {
     console.error('Erreur de connexion à MariaDB : ' + err.stack);
     return;
   }
-    console.log('Connecté à MariaDB');
+  console.log('Connecté à MariaDB');
 });
 
-// Le serveur écoute sur le port 3000
+app.get('/', (req, res) => {
+  res.send('Serveur opérationnel avec config sécurisée !');
+});
+
 app.listen(port, () => {
-  console.log(`Serveur en cours d'exécution sur http://localhost:${port}`);
+  console.log(`Serveur lancé sur le port ${port}`);
 });
