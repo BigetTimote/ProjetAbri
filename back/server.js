@@ -1,30 +1,24 @@
-require('dotenv').config(); // Charge les variables du fichier .env
+require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql2');
-
 const app = express();
+
+app.use(express.json());
+
+const authRoutes = require('./routes/auth');
+const verifyToken = require('./middleware/authMiddleware');
+
+// Route publique pour générer le token
+app.use('/auth', authRoutes);
+
+// Route protégée par le middleware JWT
+app.get('/api/mon-profil', verifyToken, (req, res) => {
+  res.json({
+    message: "Accès autorisé",
+    user: req.user
+  });
+});
+
 const port = process.env.PORT || 3000;
-
-// Configuration de la connexion utilisant les variables d'environnement
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME
-});
-
-connection.connect((err) => {
-  if (err) {
-    console.error('Erreur de connexion à MariaDB : ' + err.stack);
-    return;
-  }
-  console.log('Connecté à MariaDB');
-});
-
-app.get('/', (req, res) => {
-  res.send('Serveur opérationnel avec config sécurisée !');
-});
-
 app.listen(port, () => {
-  console.log(`Serveur lancé sur le port ${port}`);
+  console.log(`Serveur JWT lancé sur le port ${port}`);
 });
