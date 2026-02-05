@@ -9,8 +9,7 @@ router.post('/generate-token', (req, res) => {
   if (!userId) {
     return res.status(400).json({ error: "userId manquant" });
   }
-
-  // Création du token avec un payload (données) et une expiration (ex: 24h)
+  
   const token = jwt.sign(
     { id: userId, name: username },
     process.env.JWT_SECRET,
