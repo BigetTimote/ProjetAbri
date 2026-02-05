@@ -1,44 +1,40 @@
 require('dotenv').config();
 const express = require('express');
-const http = require('http');
-const cors = require('cors');
-const { WebSocketServer } = require('ws');
-
-// Imports des modules personnalisés
-const initResetJob = require('./jobs/resetCredits');
-const registerRoutes = require('./routes/register');
-const loginRoutes = require('./routes/login');
-const logoutRoutes = require('./routes/logout');
-const soldeRoutes = require('./routes/solde');
-const authRoutes = require('./routes/auth');
+const http = require('http'); // Requis pour WS
+const path = require('path');
+const { WebSocketServer } = require('ws'); // npm install ws
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const port = process.env.PORT || 3000;
-
-// Middlewares
-app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Sert index.html, css/ et js/
-
-// Initialisation du reset hebdomadaire (Lundi 2h)
-initResetJob();
 
 // Routes API
-app.use('/register', registerRoutes);
-app.use('/login', loginRoutes);
-app.use('/logout', logoutRoutes);
-app.use('/api/solde', soldeRoutes);
-app.use('/auth', authRoutes);
+app.use('/register', require('./routes/register'));
+app.use('/login', require('./routes/login'));
+app.use('/api/solde', require('./routes/solde'));
 
-// WebSocket
+app.use(express.static(path.resolve(__dirname, '..')));
+
+// Gestion du WebSocket
 wss.on('connection', (ws) => {
-    console.log('Client WS connecté');
-    ws.on('message', (data) => console.log(`Reçu: ${data}`));
+    console.log('Client connecté en temps réel');
+    
+    ws.on('message', (message) => {
+        console.log('Reçu du client:', message.toString());
+    });
+
+    // Exemple : envoyer une mise à jour toutes les 10 secondes
+    const interval = setInterval(() => {
+        ws.send(JSON.stringify({ type: 'UPDATE_TIME', message: 'Mise à jour du solde...' }));
+    }, 10000);
+
+    ws.on('close', () => clearInterval(interval));
 });
 
-server.listen(port, () => {
-    console.log(`Serveur Abri tournant sur http://172.29.16.155:${port}`);
+require('./jobs/resetCredits')();
+
+server.listen(3000, () => {
+    console.log("=== SERVEUR + WS OK SUR PORT 3000 ===");
 });

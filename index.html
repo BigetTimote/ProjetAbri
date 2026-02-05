@@ -2,32 +2,40 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abri - Dashboard Sécurisé</title>
+    <title>Abri Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <div id="auth-forms">
+        <div id="login-form">
             <h2>Connexion Abri</h2>
-            <div class="form-group">
-                <input type="text" id="login-user" placeholder="Nom">
-                <input type="password" id="login-pass" placeholder="Mot de passe">
-                <button id="btn-login">Se connecter</button>
-            </div>
-            <div class="footer-link">
-                <p>Nouveau ? <a href="#" id="toggle-reg">Créer un compte</a></p>
-            </div>
+            <input type="text" id="login-user" placeholder="Nom">
+            <input type="password" id="login-pass" placeholder="Mot de passe">
+            <button id="btn-login">Se connecter</button>
+            <p><a href="#" id="to-reg">Créer un compte</a></p>
+        </div>
+
+        <div id="register-form" class="hidden">
+            <h2>Inscription</h2>
+            <input type="text" id="reg-nom" placeholder="Nom">
+            <input type="text" id="reg-prenom" placeholder="Prénom">
+            <input type="password" id="reg-pass" placeholder="Mot de passe">
+            <button id="btn-register">S'inscrire</button>
+            <p><a href="#" id="to-login">Retour</a></p>
         </div>
 
         <div id="user-dashboard" class="hidden">
             <h3>Bienvenue, <span id="user-name"></span></h3>
             <div class="card-solde">
-                <p>Capital Temps</p>
-                <div class="time-val"><span id="user-time">--</span>h</div>
+                <div class="time-val" id="user-time">00:00</div>
             </div>
-            <button id="btn-refresh">Actualiser</button>
-            <button id="btn-logout" class="btn-danger">Déconnexion</button>
+            <button class="btn-logout">Déconnexion</button>
+        </div>
+
+        <div id="admin-dashboard" class="hidden">
+            <h2 style="color:red">Panel Admin</h2>
+            <p>Connecté : <strong id="admin-name"></strong></p>
+            <button class="btn-logout">Déconnexion</button>
         </div>
     </div>
     <script src="js/auth.js"></script>
