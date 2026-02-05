@@ -11,14 +11,13 @@ const db = mysql.createConnection({
 });
 
 router.post('/', (req, res) => {
-  const { username, password } = req.body;
+  const { username, password } = req.body; // 'username' du front sera comparé au 'nom' en BDD
 
   if (!username || !password) {
     return res.status(400).json({ error: "Identifiants manquants" });
   }
 
-  // Vérification de l'utilisateur en BDD
-  const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+  const sql = "SELECT * FROM users WHERE nom = ? AND password = ?";
   db.query(sql, [username, password], (err, results) => {
     if (err) return res.status(500).json({ error: "Erreur serveur" });
 

@@ -1,1 +1,171 @@
-Coucou
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Abri - Gestion Temps</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f4.f9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: #0056b3; }
+
+        .hidden { display: none; }
+
+        /* Cadre Capital Temps */
+        #user-section {
+            border: 2px solid #28a745;
+            background-color: #f8fff9;
+        }
+
+        .time-display {
+            font-size: 2.5em;
+            color: #28a745;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .logout-btn { background-color: #dc3545; }
+        .logout-btn:hover { background-color: #a71d2a; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="auth-forms">
+            <h2>Projet Abri</h2>
+            <div id="login-section">
+                <input type="text" id="login-user" placeholder="Nom d'utilisateur (Nom)">
+                <input type="password" id="login-pass" placeholder="Mot de passe">
+                <button onclick="login()">Se connecter</button>
+            </div>
+            <hr>
+            <div id="register-section">
+                <p>Pas de compte ?</p>
+                <input type="text" id="reg-nom" placeholder="Nom">
+                <input type="text" id="reg-prenom" placeholder="Prénom">
+                <input type="password" id="reg-pass" placeholder="Mot de passe">
+                <button onclick="register()" style="background-color: #6c757d;">S'inscrire</button>
+            </div>
+        </div>
+
+        <div id="user-section" class="hidden">
+            <h3>Bienvenue, <span id="display-user"></span></h3>
+            <p>Votre capital temps actuel :</p>
+            <div class="time-display"><span id="display-time">--</span>h</div>
+            <button onclick="refreshTime()">Actualiser</button>
+            <button class="logout-btn" onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://172.29.16.155:3000';
+
+        async function register() {
+            const nom = document.getElementById('reg-nom').value;
+            const prenom = document.getElementById('reg-prenom').value;
+            const password = document.getElementById('reg-pass').value;
+
+            const res = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nom, prenom, password, classe: "BTS" })
+            });
+            const data = await res.json();
+            alert(data.message || data.error);
+        }
+
+        async function login() {
+            const username = document.getElementById('login-user').value;
+            const password = document.getElementById('login-pass').value;
+
+            const res = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', username);
+                showLoggedIn(username);
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function refreshTime() {
+    const token = localStorage.getItem('token');
+    try {
+        // On tape maintenant sur /api/solde au lieu de /api/mon-credit
+        const res = await fetch(`${API_URL}/api/solde`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.credit !== undefined) {
+            document.getElementById('display-time').innerText = data.credit;
+        }
+    } catch (err) {
+        console.error("Erreur récup solde", err);
+    }
+}
+
+        function showLoggedIn(username) {
+            document.getElementById('auth-forms').classList.add('hidden');
+            document.getElementById('user-section').classList.remove('hidden');
+            document.getElementById('display-user').innerText = username;
+            refreshTime(); // Charge le temps immédiatement
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        window.onload = () => {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('username');
+            if (token && user) showLoggedIn(user);
+        };
+    </script>
+</body>
+</html>

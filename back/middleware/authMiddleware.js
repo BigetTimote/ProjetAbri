@@ -2,20 +2,18 @@ const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Récupère le token après "Bearer"
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     return res.status(403).json({ message: "403 Forbidden : Token manquant" });
   }
 
-  // Vérification de la signature du token
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ message: "403 Forbidden : Token invalide ou expiré" });
+      return res.status(403).json({ message: "403 Forbidden : Token invalide" });
     }
-
-    // On ajoute les infos de l'utilisateur à l'objet 'req' pour les routes suivantes
-    req.user = user;
+    // On attache les infos décodées à req.user pour que routes/solde.js puisse les lire
+    req.user = decoded; 
     next();
   });
 };
