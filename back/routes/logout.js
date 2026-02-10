@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
+// POST /logout
 router.post('/', (req, res) => {
-  // Côté client, il faudra supprimer le token du localStorage ou des cookies.
-  res.json({ message: "Déconnexion réussie. Pensez à supprimer le token côté client." });
+    // Dans un système JWT simple, le serveur ne fait rien de spécial.
+    // Si tu voulais invalider le token, il faudrait une "blacklist" en base de données.
+    res.json({ 
+        message: "Déconnexion réussie.",
+        instruction: "Veuillez supprimer le JWT du localStorage." 
+    });
 });
 
 module.exports = router;

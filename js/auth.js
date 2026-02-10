@@ -114,16 +114,55 @@ function initUI() {
     }
 }
 
+async function fetchUsers() {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`${API_URL}/api/users`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = await res.json();
+        const tbody = document.getElementById('users-list');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        users.forEach(user => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding:8px; border:1px solid #ddd;">${user.nom}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${user.prenom}</td>
+                <td style="padding:8px; border:1px solid #ddd; font-family: monospace;">${user.id}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error("Erreur chargement utilisateurs :", err);
+    }
+}
 // --- ÉVÉNEMENTS ---
 
 window.onload = () => {
+    console.log("1. Le navigateur a fini de charger la page");
+    
     initUI();
+    console.log("2. initUI a été exécuté");
 
-    // Gestion des clics boutons
-    document.getElementById('btn-login')?.addEventListener('click', login);
-    document.getElementById('btn-register')?.addEventListener('click', register);
+    // DÉLÉGATION DE CLIC UNIQUE
+    document.addEventListener('click', (e) => {
+        // On cherche si l'élément cliqué est le bouton déconnexion
+        if (e.target && e.target.classList.contains('btn-logout')) {
+            e.preventDefault();
+            console.log("3. CLIC DÉTECTÉ SUR LE BOUTON LOGOUT");
+            logout();
+        }
 
-    // Basculement formulaires
+        // Gestion du bouton login (si présent)
+        if (e.target.id === 'btn-login') {
+            e.preventDefault();
+            login();
+        }
+    });
+
+    // Basculement de formulaires
     document.getElementById('to-reg')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('login-form').classList.add('hidden');
@@ -134,14 +173,6 @@ window.onload = () => {
         e.preventDefault();
         document.getElementById('register-form').classList.add('hidden');
         document.getElementById('login-form').classList.remove('hidden');
-    });
-
-    // Déconnexion
-    document.querySelectorAll('.btn-logout').forEach(btn => {
-        btn.addEventListener('click', () => {
-            localStorage.clear();
-            location.reload();
-        });
     });
 };
 // Connexion WebSocket (Port 3000)
@@ -178,10 +209,57 @@ function initUI() {
     if (payload && payload.admin === 1) {
         document.getElementById('admin-dashboard').classList.remove('hidden');
         document.getElementById('admin-name').innerText = payload.username;
+        
+        // On lance la récupération des deux tables
+        fetchBoxes(); 
+        fetchUsers(); 
     } else {
         document.getElementById('user-dashboard').classList.remove('hidden');
         document.getElementById('user-name').innerText = payload.username;
-        fetchSolde();
-        setupRealtime(); // <-- ON LANCE LE WS ICI
+        // fetchSolde(); 
+    }
+}
+async function fetchBoxes() {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/boxes`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const boxes = await res.json();
+
+        const tbody = document.getElementById('boxes-list');
+        if (!tbody) {
+            console.error("Erreur : l'élément #boxes-list est introuvable dans le HTML");
+            return;
+        }
+
+        tbody.innerHTML = ''; // On vide le tableau avant de le remplir
+
+        boxes.forEach(box => {
+            const tr = document.createElement('tr');
+            // Couleur : Vert pour LIBRE, Rouge pour le reste
+            const statusColor = box.etat === 'LIBRE' ? 'green' : 'red';
+            
+            tr.innerHTML = `
+                <td style="padding:8px; border:1px solid #ddd;">${box.numero}</td>
+                <td style="padding:8px; border:1px solid #ddd; color:${statusColor}; font-weight:bold;">${box.etat}</td>
+                <td style="padding:8px; border:1px solid #ddd;">${box.user_id_actuel || '<i>Aucun</i>'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error("Erreur lors du chargement des boxes :", err);
+    }
+}
+async function logout() {
+    console.log("Exécution de la fonction logout...");
+    try {
+        await fetch(`${API_URL}/logout`, { method: 'POST' });
+    } catch (err) {
+        console.warn("Erreur route logout (pas grave) :", err);
+    } finally {
+        localStorage.removeItem('token');
+        console.log("Token supprimé, redirection...");
+        window.location.href = 'index.html'; // Force le retour à l'accueil
     }
 }
