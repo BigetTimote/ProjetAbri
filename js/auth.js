@@ -1,4 +1,3 @@
-// On force le port 3000 pour parler directement à Node et ignorer Apache
 const API_URL = 'http://172.29.16.155:3000'; 
 
 // --- UTILITAIRES ---
@@ -130,7 +129,7 @@ async function fetchUsers() {
             tr.innerHTML = `
                 <td style="padding:8px; border:1px solid #ddd;">${user.nom}</td>
                 <td style="padding:8px; border:1px solid #ddd;">${user.prenom}</td>
-                <td style="padding:8px; border:1px solid #ddd; font-family: monospace;">${user.id}</td>
+                <td style="padding:8px; border:1px solid #ddd; font-family: monospace;">${user.badge_uid}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -141,10 +140,8 @@ async function fetchUsers() {
 // --- ÉVÉNEMENTS ---
 
 window.onload = () => {
-    console.log("1. Le navigateur a fini de charger la page");
     
     initUI();
-    console.log("2. initUI a été exécuté");
 
     // DÉLÉGATION DE CLIC UNIQUE
     document.addEventListener('click', (e) => {

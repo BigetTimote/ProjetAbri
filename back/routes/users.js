@@ -18,7 +18,7 @@ router.get('/', authMiddleware, (req, res) => {
     }
 
     // Requête SQL : Vérifie que la colonne s'appelle bien 'id' (ou 'uid') dans ta table users
-    const sql = "SELECT id, nom, prenom FROM users ORDER BY nom ASC";
+    const sql = "SELECT badge_uid, nom, prenom FROM users ORDER BY nom ASC";
     
     db.query(sql, (err, results) => {
         if (err) {
