@@ -1,4 +1,4 @@
-// routesRFID/verification.js (VERSION MODIFIEE)
+// routesRFID/verification.js (VERSION MODIFIEE - Accès autorisés + Crédit épuisé)
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2/promise');
@@ -47,7 +47,9 @@ router.get('/', async (req, res) => {
             if (user.credit_temps <= 0 && user.is_admin === 0) {
                 console.log(`[REFUS] Crédit temps épuisé pour ${user.prenom} ${user.nom}`);
                 
-                // Notification Arduino - ACCES REFUSE
+                // ⚠️ NOTIFICATION ARDUINO pour crédit épuisé/négatif
+                console.log(`[NOTIFICATION ARDUINO] Envoi - Crédit épuisé pour ${user.prenom} ${user.nom}`);
+                
                 notifyArduino({
                     access: 'denied',
                     badge: cardId,
@@ -55,7 +57,11 @@ router.get('/', async (req, res) => {
                     credit: user.credit_temps,
                     reason: 'Crédit temps épuisé',
                     timestamp: new Date().toISOString()
-                }).catch(err => console.error('[ARDUINO] Erreur notification:', err));
+                }).then(() => {
+                    console.log(`[ARDUINO] ✓ Notification refus envoyée avec succès`);
+                }).catch(err => {
+                    console.error('[ARDUINO] ✗ Erreur notification:', err);
+                });
 
                 return res.status(401).send(`
                     <root>
@@ -66,7 +72,9 @@ router.get('/', async (req, res) => {
                 `);
             }
 
-            // ACCÈS AUTORISÉ - Notification Arduino
+            // ✅ ACCÈS AUTORISÉ - NOTIFICATION ARDUINO UNIQUEMENT ICI
+            console.log(`[NOTIFICATION ARDUINO] Envoi pour ${user.prenom} ${user.nom}`);
+            
             notifyArduino({
                 access: 'granted',
                 badge: cardId,
@@ -74,7 +82,11 @@ router.get('/', async (req, res) => {
                 credit: user.credit_temps,
                 is_admin: user.is_admin,
                 timestamp: new Date().toISOString()
-            }).catch(err => console.error('[ARDUINO] Erreur notification:', err));
+            }).then(() => {
+                console.log(`[ARDUINO] ✓ Notification envoyée avec succès`);
+            }).catch(err => {
+                console.error('[ARDUINO] ✗ Erreur notification:', err);
+            });
 
             res.status(200).send(`
                 <root>
@@ -86,17 +98,9 @@ router.get('/', async (req, res) => {
             `);
 
         } else {
-            // ACCÈS REFUSÉ (Badge non trouvé en BDD)
-            console.log(`[ACCES REFUSÉ] Badge inconnu : ${cardId}`);
-            
-            // Notification Arduino - Badge inconnu
-            notifyArduino({
-                access: 'denied',
-                badge: cardId,
-                user: 'Inconnu',
-                reason: 'Badge non enregistré',
-                timestamp: new Date().toISOString()
-            }).catch(err => console.error('[ARDUINO] Erreur notification:', err));
+            // ❌ ACCÈS REFUSÉ (Badge non trouvé en BDD)
+            // PAS DE NOTIFICATION ARDUINO pour les badges inconnus
+            console.log(`[ACCES REFUSÉ] Badge inconnu : ${cardId} - Pas de notification Arduino`);
            
             res.status(401).send(`
                 <root>
@@ -110,13 +114,7 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error('[ERREUR BDD] Problème de connexion ou de requête :', error);
         
-        // Notification Arduino - Erreur système
-        notifyArduino({
-            access: 'error',
-            badge: cardId,
-            reason: 'Erreur base de données',
-            timestamp: new Date().toISOString()
-        }).catch(err => console.error('[ARDUINO] Erreur notification:', err));
+        // ❌ PAS DE NOTIFICATION ARDUINO pour les erreurs système
         
         res.status(500).send('<root><buzz>3</buzz><ledr>10,5,3</ledr></root>');
     }
