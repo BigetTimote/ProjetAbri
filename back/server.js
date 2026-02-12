@@ -16,6 +16,7 @@ app.use('/login', require('./routes/login'));
 app.use('/api/solde', require('./routes/solde'));
 app.use('/logout', require('./routes/logout'));
 app.use('/api/users', require('./routes/users'));
+app.use('/log', require('./routesRFID/verification')); // Route pour le lecteur RFID
 const boxesRoutes = require('./routes/boxes');
 
 app.use('/api/boxes', boxesRoutes);

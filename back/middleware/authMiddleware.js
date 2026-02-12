@@ -8,7 +8,7 @@ module.exports = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) return res.status(403).json({ error: "Token invalide" });
-        req.user = decoded; // Contient id, username et admin
+        req.user = decoded; 
         next();
     });
 };
